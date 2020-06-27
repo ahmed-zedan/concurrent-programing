@@ -22,6 +22,10 @@ class MyService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action){
+            NOTIFICATION_ACTION_PLAY -> startMusic()
+            NOTIFICATION_ACTION_STOP -> stopMusic()
+        }
         return START_STICKY
     }
 
@@ -53,12 +57,17 @@ class MyService : Service() {
         val pendingIntent =
             PendingIntent.getActivity(this, 0, notificationIntent, 0)
 
+        val playIntent = getPendingIntent(NOTIFICATION_ACTION_PLAY)
+        val stopIntent = getPendingIntent(NOTIFICATION_ACTION_STOP)
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Playing music")
             .setContentText(AUDIO_FILE)
             .setSmallIcon(R.drawable.ic_run)
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .addAction(0, "Play", playIntent)
+            .addAction(0, "Stop", stopIntent)
             .setWhen(0)
             .build()
 
@@ -94,6 +103,13 @@ class MyService : Service() {
 
     }
 
+    private fun getPendingIntent(action: String): PendingIntent{
+        val serviceIntent = Intent(this, MyService::class.java).also {
+            it.action = action
+        }
+        return PendingIntent.getService(this, 0, serviceIntent, 0)
+    }
+
     inner class MyBindService : Binder(){
         fun getService() = this@MyService
     }
@@ -101,5 +117,9 @@ class MyService : Service() {
     companion object{
         private const val TAG = "MyServiceTAG"
         const val AUDIO_FILE = "happy_day.mp3"
+
+        private const val NOTIFICATION_ACTION_PLAY = "action_play"
+        private const val NOTIFICATION_ACTION_STOP = "action_stop"
+
     }
 }
