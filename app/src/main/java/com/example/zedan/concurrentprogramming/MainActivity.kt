@@ -1,10 +1,11 @@
 package com.example.zedan.concurrentprogramming
 
-import android.app.Activity
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -29,8 +30,8 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
-        val resultReceiver  = MyResultReceiver(Handler())
-        MyIntentService.startAction(this, FILE_URL, resultReceiver)
+        val workRequest = OneTimeWorkRequestBuilder<MyWorker>().build()
+        WorkManager.getInstance(applicationContext).enqueue(workRequest)
     }
 
     /**
@@ -57,22 +58,10 @@ class MainActivity : AppCompatActivity() {
         Handler().post { binding.scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 
-    private inner class MyResultReceiver(handler: Handler):
-        ResultReceiver(handler){
-
-        override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-            if (resultCode == Activity.RESULT_OK){
-                val fileContents = resultData?.getString(FILE_CONTENTS_KEY) ?: "Null"
-                log(fileContents)
-            }
-        }
-    }
-
 
 
     companion object{
         private const val FILE_URL = "https://2833069.youcanlearnit.net/lorem_ipsum.txt"
-        const val FILE_CONTENTS_KEY = "file_contents_key"
         private const val LOG_TAG = "CodeRunner"
     }
 }
