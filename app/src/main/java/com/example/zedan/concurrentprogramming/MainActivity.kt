@@ -4,15 +4,17 @@ import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
-import kotlinx.coroutines.*
-import java.net.URL
-import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private val viewModel: MainViewModel by lazy {
+        ViewModelProvider(this).get(MainViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,16 +28,17 @@ class MainActivity : AppCompatActivity() {
             clearButton.setOnClickListener { clearOutput() }
         }
 
+        viewModel.myData.observe(this, Observer {
+            log(it)
+        })
+
     }
 
     /**
      * Run some code
      */
     private fun runCode(){
-        CoroutineScope(Dispatchers.Main).launch {
-            val result = fetchSomething()
-            log(result ?: "Null")
-        }
+        viewModel.doWork()
     }
 
     /**
@@ -62,16 +65,10 @@ class MainActivity : AppCompatActivity() {
         Handler().post { binding.scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 
-    private suspend fun fetchSomething(): String?{
-        log("Requesting file started")
-        return withContext(Dispatchers.IO) {
-            val url = URL(fileUlr)
-            return@withContext url.readText(Charset.defaultCharset())
-        }
-    }
+
 
     companion object{
-        private const val fileUlr = "https://2833069.youcanlearnit.net/lorem_ipsum.txt"
+        const val fileUlr = "https://2833069.youcanlearnit.net/lorem_ipsum.txt"
         private const val LOG_TAG = "CodeRunner"
     }
 }
