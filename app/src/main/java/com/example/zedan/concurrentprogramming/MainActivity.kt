@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         Intent(this, MyService::class.java).also {
             bindService(it, connection, Context.BIND_AUTO_CREATE)
+            startService(it)
         }
     }
 
@@ -59,13 +60,14 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
-        myService.doSomething()
+        myService.startMusic()
     }
 
     /**
      * clear log display
      */
     private fun clearOutput(){
+        myService.stopMusic()
         binding.logDisplay.text = ""
     }
 
