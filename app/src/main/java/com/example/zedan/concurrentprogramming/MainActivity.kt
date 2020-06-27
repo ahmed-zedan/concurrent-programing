@@ -4,6 +4,8 @@ import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
+import androidx.work.Constraints
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
@@ -30,7 +32,14 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
-        val workRequest = OneTimeWorkRequestBuilder<MyWorker>().build()
+        val constraint = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val workRequest= OneTimeWorkRequestBuilder<MyWorker>()
+            .setConstraints(constraint)
+            .build()
+
         WorkManager.getInstance(applicationContext).enqueue(workRequest)
     }
 
