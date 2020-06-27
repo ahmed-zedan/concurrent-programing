@@ -1,5 +1,6 @@
 package com.example.zedan.concurrentprogramming
 
+import android.app.Activity
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
@@ -28,7 +29,8 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
-        MyIntentService.startActionFoo(this, "param1", "param2")
+        val resultReceiver  = MyResultReceiver(Handler())
+        MyIntentService.startAction(this, FILE_URL, resultReceiver)
     }
 
     /**
@@ -55,9 +57,22 @@ class MainActivity : AppCompatActivity() {
         Handler().post { binding.scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 
+    private inner class MyResultReceiver(handler: Handler):
+        ResultReceiver(handler){
+
+        override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+            if (resultCode == Activity.RESULT_OK){
+                val fileContents = resultData?.getString(FILE_CONTENTS_KEY) ?: "Null"
+                log(fileContents)
+            }
+        }
+    }
+
 
 
     companion object{
+        private const val FILE_URL = "https://2833069.youcanlearnit.net/lorem_ipsum.txt"
+        const val FILE_CONTENTS_KEY = "file_contents_key"
         private const val LOG_TAG = "CodeRunner"
     }
 }

@@ -1,10 +1,15 @@
 package com.example.zedan.concurrentprogramming
 
-import android.app.IntentService
-import android.content.Intent
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.os.ResultReceiver
 import android.util.Log
 import androidx.core.app.JobIntentService
+import com.example.zedan.concurrentprogramming.MainActivity.Companion.FILE_CONTENTS_KEY
+import java.net.URL
+import java.nio.charset.Charset
 
 /**
  * An [JobIntentService] subclass for handling asynchronous task requests in
@@ -14,76 +19,41 @@ import androidx.core.app.JobIntentService
 class MyIntentService : JobIntentService() {
 
     override fun onHandleWork(intent: Intent) {
-        when (intent.action) {
-            ACTION_FOO -> {
-                val param1 = intent.getStringExtra(EXTRA_PARAM1)
-                val param2 = intent.getStringExtra(EXTRA_PARAM2)
-                handleActionFoo(param1, param2)
-            }
-            ACTION_BAZ -> {
-                val param1 = intent.getStringExtra(EXTRA_PARAM1)
-                val param2 = intent.getStringExtra(EXTRA_PARAM2)
-                handleActionBaz(param1, param2)
-            }
+        if (intent.action == JOB_ACTION){
+            val fileUrl = URL(intent.getStringExtra(EXTRA_FILE_URL))
+            val contents = fileUrl.readText(Charset.defaultCharset())
+            Log.i(TAG, "onHandleWork: $contents")
+
+            val bundle = Bundle()
+            bundle.putString(FILE_CONTENTS_KEY, contents)
+            val receiver = intent.getParcelableExtra<ResultReceiver>(RECEIVER_KEY)
+            receiver?.send(Activity.RESULT_OK, bundle)
         }
     }
 
-    /**
-     * Handle action Foo in the provided background thread with the provided
-     * parameters.
-     */
-    private fun handleActionFoo(param1: String, param2: String) {
-        Log.i(TAG, "handleActionFoo: $param1 , $param2")
-    }
-
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private fun handleActionBaz(param1: String, param2: String) {
-        Log.i(TAG, "handleActionBaz: $param1 , $param2")
-    }
 
     companion object {
 
         private const val TAG = "RunnerCodeIntentService"
 
-        // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-        private const val ACTION_FOO = "com.example.zedan.concurrentprogramming.action.FOO"
-        private const val ACTION_BAZ = "com.example.zedan.concurrentprogramming.action.BAZ"
+        private const val JOB_ACTION = "com.example.zedan.concurrentprogramming.action.FOO"
 
-        private const val EXTRA_PARAM1 = "com.example.zedan.concurrentprogramming.extra.PARAM1"
-        private const val EXTRA_PARAM2 = "com.example.zedan.concurrentprogramming.extra.PARAM2"
+        private const val EXTRA_FILE_URL = "com.example.zedan.concurrentprogramming.extra.FILE_URL"
+        private const val RECEIVER_KEY = "receiver_key"
 
         private const val JOB_ID = 1001
         /**
          * Starts this service to perform action Foo with the given parameters. If
          * the service is already performing a task this action will be queued.
          *
-         * @see IntentService
+         * @see JobIntentService
          */
         @JvmStatic
-        fun startActionFoo(context: Context, param1: String, param2: String) {
+        fun startAction(context: Context, fileUrl: String, receiver: ResultReceiver) {
             val intent = Intent(context, MyIntentService::class.java).apply {
-                action = ACTION_FOO
-                putExtra(EXTRA_PARAM1, param1)
-                putExtra(EXTRA_PARAM2, param2)
-            }
-            enqueueWork(context, MyIntentService::class.java, JOB_ID, intent)
-        }
-
-        /**
-         * Starts this service to perform action Baz with the given parameters. If
-         * the service is already performing a task this action will be queued.
-         *
-         * @see IntentService
-         */
-        @JvmStatic
-        fun startActionBaz(context: Context, param1: String, param2: String) {
-            val intent = Intent(context, MyIntentService::class.java).apply {
-                action = ACTION_BAZ
-                putExtra(EXTRA_PARAM1, param1)
-                putExtra(EXTRA_PARAM2, param2)
+                action = JOB_ACTION
+                putExtra(RECEIVER_KEY, receiver)
+                putExtra(EXTRA_FILE_URL, fileUrl)
             }
             enqueueWork(context, MyIntentService::class.java, JOB_ID, intent)
         }
