@@ -29,7 +29,10 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
-        log("Running code.")
+        Handler().post { log("Operation from runnable 1.") }
+        log("Synchronous operation 1.")
+        log("Synchronous operation 2.")
+        log("Synchronous operation 3.")
     }
 
     /**
