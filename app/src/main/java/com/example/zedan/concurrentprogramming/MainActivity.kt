@@ -4,17 +4,12 @@ import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private val viewModel: MainViewModel by lazy {
-        ViewModelProvider(this).get(MainViewModel::class.java)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,21 +20,15 @@ class MainActivity : AppCompatActivity() {
 
         with(binding){
             runButton.setOnClickListener { runCode() }
-            clearButton.setOnClickListener { viewModel.cancelJob() }
+            clearButton.setOnClickListener { clearOutput() }
         }
-
-        viewModel.myData.observe(this, Observer {
-            log(it)
-        })
-
     }
 
     /**
      * Run some code
      */
     private fun runCode(){
-        clearOutput()
-        viewModel.doWork()
+        MyIntentService.startActionFoo(this, "param1", "param2")
     }
 
     /**
@@ -69,7 +58,6 @@ class MainActivity : AppCompatActivity() {
 
 
     companion object{
-        const val fileUlr = "https://2833069.youcanlearnit.net/lorem_ipsum.txt"
         private const val LOG_TAG = "CodeRunner"
     }
 }
