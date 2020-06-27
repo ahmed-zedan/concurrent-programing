@@ -1,9 +1,7 @@
 package com.example.zedan.concurrentprogramming
 
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Handler
-import android.os.SystemClock
 import android.util.Log
 import android.widget.ScrollView
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
@@ -12,6 +10,14 @@ import kotlin.concurrent.thread
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    private val handler = object : Handler(Looper.getMainLooper()){
+        override fun handleMessage(msg: Message) {
+            val bundle = msg.data
+            val message = bundle.getString(MESSAGE_KEY)
+            log(message ?: "message was null.")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,18 +37,22 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
-
-        /**
-         * Now i can't call [log] method
-         * because  I'm running in a background thread.
-         * When you're in a background thread, you do not have direct access to the UI
-         */
+        // Use bundle and message to pass data UIThread.
         thread(start = true) {
+            val bundle = Bundle()
             for (i in 0..10){
-                Log.i(LOG_TAG, "Lopping $i")
+                bundle.putString(MESSAGE_KEY, "Lopping $i")
+                Message().also {
+                    it.data = bundle
+                    handler.sendMessage(it)
+                }
                 Thread.sleep(1000)
             }
-            Log.i(LOG_TAG, "All done.")
+            bundle.putString(MESSAGE_KEY, "All done.")
+            Message().also {
+                it.data = bundle
+                handler.sendMessage(it)
+            }
         }
 
     }
@@ -72,6 +82,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object{
+        private const val  MESSAGE_KEY = "message_key"
         private const val LOG_TAG = "CodeRunner"
     }
 }
