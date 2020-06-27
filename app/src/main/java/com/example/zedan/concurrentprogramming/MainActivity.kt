@@ -5,11 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.concurrent.thread
+import kotlinx.coroutines.*
+import java.net.URL
+import java.nio.charset.Charset
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     private fun runCode(){
         CoroutineScope(Dispatchers.Main).launch {
             val result = fetchSomething()
-            log(result)
+            log(result ?: "Null")
         }
     }
 
@@ -64,13 +62,16 @@ class MainActivity : AppCompatActivity() {
         Handler().post { binding.scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
     }
 
-    private suspend fun fetchSomething(): String{
-        delay(2000)
-        return "Something from API"
+    private suspend fun fetchSomething(): String?{
+        log("Requesting file started")
+        return withContext(Dispatchers.IO) {
+            val url = URL(fileUlr)
+            return@withContext url.readText(Charset.defaultCharset())
+        }
     }
 
     companion object{
-        private const val  MESSAGE_KEY = "message_key"
+        private const val fileUlr = "https://2833069.youcanlearnit.net/lorem_ipsum.txt"
         private const val LOG_TAG = "CodeRunner"
     }
 }
