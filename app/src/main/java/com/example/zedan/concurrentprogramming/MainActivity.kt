@@ -5,19 +5,16 @@ import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private val handler = object : Handler(Looper.getMainLooper()){
-        override fun handleMessage(msg: Message) {
-            val bundle = msg.data
-            val message = bundle.getString(MESSAGE_KEY)
-            log(message ?: "message was null.")
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,24 +34,10 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
-        // Use bundle and message to pass data UIThread.
-        thread(start = true) {
-            val bundle = Bundle()
-            for (i in 0..10){
-                bundle.putString(MESSAGE_KEY, "Lopping $i")
-                Message().also {
-                    it.data = bundle
-                    handler.sendMessage(it)
-                }
-                Thread.sleep(1000)
-            }
-            bundle.putString(MESSAGE_KEY, "All done.")
-            Message().also {
-                it.data = bundle
-                handler.sendMessage(it)
-            }
+        CoroutineScope(Dispatchers.Main).launch {
+            val result = fetchSomething()
+            log(result)
         }
-
     }
 
     /**
@@ -79,6 +62,11 @@ class MainActivity : AppCompatActivity() {
      */
     private fun scrollTextToEnd(){
         Handler().post { binding.scrollView.fullScroll(ScrollView.FOCUS_DOWN) }
+    }
+
+    private suspend fun fetchSomething(): String{
+        delay(2000)
+        return "Something from API"
     }
 
     companion object{
