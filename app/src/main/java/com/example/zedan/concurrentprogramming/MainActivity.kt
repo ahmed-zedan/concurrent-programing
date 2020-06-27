@@ -1,18 +1,33 @@
 package com.example.zedan.concurrentprogramming
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
-import androidx.lifecycle.Observer
-import androidx.work.*
-import com.example.zedan.concurrentprogramming.MyWorker.Companion.DATA_KEY
-import com.example.zedan.concurrentprogramming.MyWorker.Companion.MESSAGE_KEY
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
+    private lateinit var myService: MyService
+
+    private val connection = object : ServiceConnection{
+        override fun onServiceDisconnected(name: ComponentName?) {
+            Log.i(LOG_TAG, "onServiceDisconnected: call.")
+        }
+
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            Log.i(LOG_TAG, "onServiceConnected: call.")
+            val binder = service as MyService.MyBindService
+            myService = binder.getService()
+        }
+
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,33 +43,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        Intent(this, MyService::class.java).also {
+            bindService(it, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unbindService(connection)
+    }
     /**
+     *
      * Run some code
      */
     private fun runCode(){
-        val constraint = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val workRequest= OneTimeWorkRequestBuilder<MyWorker>()
-            .setConstraints(constraint)
-            .build()
-
-        val workManager = WorkManager.getInstance(applicationContext)
-        workManager.enqueue(workRequest)
-        workManager.getWorkInfoByIdLiveData(workRequest.id)
-            .observe(this, Observer {
-                when (it.state) {
-                    WorkInfo.State.SUCCEEDED -> {
-                        val result = it.outputData.getString(DATA_KEY) ?: "Null"
-                        log(result)
-                    }
-                    WorkInfo.State.RUNNING -> {
-                        val progress = it.progress.getString(MESSAGE_KEY)
-                        progress?.let{m -> log(m) }
-                    }
-                }
-            })
+        myService.doSomething()
     }
 
     /**
