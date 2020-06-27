@@ -7,6 +7,7 @@ import android.widget.ScrollView
 import androidx.lifecycle.Observer
 import androidx.work.*
 import com.example.zedan.concurrentprogramming.MyWorker.Companion.DATA_KEY
+import com.example.zedan.concurrentprogramming.MyWorker.Companion.MESSAGE_KEY
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -43,9 +44,15 @@ class MainActivity : AppCompatActivity() {
         workManager.enqueue(workRequest)
         workManager.getWorkInfoByIdLiveData(workRequest.id)
             .observe(this, Observer {
-                if (it.state == WorkInfo.State.SUCCEEDED){
-                    val result = it.outputData.getString(DATA_KEY) ?: "Null"
-                    log(result)
+                when (it.state) {
+                    WorkInfo.State.SUCCEEDED -> {
+                        val result = it.outputData.getString(DATA_KEY) ?: "Null"
+                        log(result)
+                    }
+                    WorkInfo.State.RUNNING -> {
+                        val progress = it.progress.getString(MESSAGE_KEY)
+                        progress?.let{m -> log(m) }
+                    }
                 }
             })
     }
