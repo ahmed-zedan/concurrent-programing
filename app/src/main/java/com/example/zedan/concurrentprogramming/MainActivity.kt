@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         with(binding){
             runButton.setOnClickListener { runCode() }
-            clearButton.setOnClickListener { clearOutput() }
+            clearButton.setOnClickListener { viewModel.cancelJob() }
         }
 
         viewModel.myData.observe(this, Observer {
@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
      * Run some code
      */
     private fun runCode(){
+        clearOutput()
         viewModel.doWork()
     }
 
