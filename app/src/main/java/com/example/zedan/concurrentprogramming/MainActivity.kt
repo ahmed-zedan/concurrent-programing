@@ -4,10 +4,9 @@ import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.widget.ScrollView
-import androidx.work.Constraints
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.lifecycle.Observer
+import androidx.work.*
+import com.example.zedan.concurrentprogramming.MyWorker.Companion.DATA_KEY
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -40,7 +39,15 @@ class MainActivity : AppCompatActivity() {
             .setConstraints(constraint)
             .build()
 
-        WorkManager.getInstance(applicationContext).enqueue(workRequest)
+        val workManager = WorkManager.getInstance(applicationContext)
+        workManager.enqueue(workRequest)
+        workManager.getWorkInfoByIdLiveData(workRequest.id)
+            .observe(this, Observer {
+                if (it.state == WorkInfo.State.SUCCEEDED){
+                    val result = it.outputData.getString(DATA_KEY) ?: "Null"
+                    log(result)
+                }
+            })
     }
 
     /**
