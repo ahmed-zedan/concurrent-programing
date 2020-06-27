@@ -7,6 +7,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.widget.ScrollView
 import com.example.zedan.concurrentprogramming.databinding.ActivityMainBinding
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,16 +32,19 @@ class MainActivity : AppCompatActivity() {
      */
     private fun runCode(){
 
-        Handler().postAtTime( {log("Posting at a certain time.")} , SystemClock.uptimeMillis() + 4000)
+        /**
+         * Now i can't call [log] method
+         * because  I'm running in a background thread.
+         * When you're in a background thread, you do not have direct access to the UI
+         */
+        thread(start = true) {
+            for (i in 0..10){
+                Log.i(LOG_TAG, "Lopping $i")
+                Thread.sleep(1000)
+            }
+            Log.i(LOG_TAG, "All done.")
+        }
 
-        //The value that you pass into the postDelayed function
-        //indicates how long you want to wait from the time the code was executed.
-        Handler().postDelayed({ log("Operation from runnable 1.") }, 3000)
-        Handler().postDelayed({ log("Operation from runnable 2.") }, 2000)
-        Handler().postDelayed({ log("Operation from runnable 3.") }, 1000)
-        log("Synchronous operation 1.")
-        log("Synchronous operation 2.")
-        log("Synchronous operation 3.")
     }
 
     /**
@@ -68,6 +72,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object{
-        private const val LOG_TAG = "MainActivity"
+        private const val LOG_TAG = "CodeRunner"
     }
 }
